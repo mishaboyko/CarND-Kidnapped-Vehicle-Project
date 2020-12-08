@@ -9,9 +9,14 @@
 #ifndef PARTICLE_FILTER_H_
 #define PARTICLE_FILTER_H_
 
+#include <random>
 #include <string>
 #include <vector>
 #include "helper_functions.h"
+
+
+using std::default_random_engine;
+using std::normal_distribution;
 
 struct Particle {
   int id;
@@ -26,6 +31,7 @@ struct Particle {
 
 
 class ParticleFilter {
+
  public:
   // Constructor
   // @param num_particles Number of particles
@@ -40,27 +46,27 @@ class ParticleFilter {
    * @param x Initial x position [m] (simulated estimate from GPS)
    * @param y Initial y position [m] (simulated estimate from GPS)
    * @param theta Initial orientation (heading estimate) [rad]
-   * @param std[] Array of uncertaintiles (standard deviation) for position (x,y) & yaw. [m, m, rad]
+   * @param std[] Measurement uncertaintines (standard deviation) for position (x,y) & yaw. [m, m, rad]
    */
   void init(double x, double y, double theta, double std[]);
 
   /**
    * Predicts the state for the next time step using the process model.
    * @param delta_t Time between time step t and t+1 in measurements [s]
-   * @param std_pos[] Measurement uncertaintines (standard deviation) for position (x,y) & yaw [m, m, rad]
+   * @param std[] Measurement uncertaintines (standard deviation) for position (x,y) & yaw [m, m, rad]
    * @param velocity Velocity of car from t to t+1 [m/s]
    * @param yaw_rate Yaw rate of car from t to t+1 [rad/s]
    */
-  void prediction(double delta_t, double std_pos[], double velocity,
+  void prediction(double delta_t, double std[], double velocity,
                   double yaw_rate);
 
   /**
    * Finds which observations correspond to which landmarks by using a nearest-neighbors data association.
    * @param predicted Vector of predicted landmark observations/measurements between one particular particle and all the map landmarks within sensor range
-   * @param observations Vector of actual landmark observations/measurements, gathered from the lidar.
+   * @param measured_landmarks Vector of actual landmark observations/measurements, gathered from the lidar.
    */
-  void dataAssociation(std::vector<LandmarkObs> predicted,
-                       std::vector<LandmarkObs>& observations);
+  void dataAssociation(std::vector<LandmarkObs>& predicted,
+                       std::vector<LandmarkObs>& measured_landmarks);
 
   /**
    * Updates the weights for each particle based on the likelihood of the observed measurements.
@@ -105,6 +111,8 @@ class ParticleFilter {
   std::vector<Particle> particles;
 
  private:
+  void normalize_weights();
+
   // Number of particles to draw
   int num_particles;
 
@@ -113,6 +121,9 @@ class ParticleFilter {
 
   // Vector of weights of all particles
   std::vector<double> weights;
+
+  std::default_random_engine random_engine;
+
 };
 
 #endif  // PARTICLE_FILTER_H_
